@@ -1,6 +1,6 @@
 # Self adjusting (1, λ)-EA with (1:s+1)-rule
 
-This repository contains codes for generating figures in the following 2 papers by M. Kaufmann, M. Larcher, J。 Lengler, and X. Zou:
+This repository contains codes for generating figures in the following 2 papers by M. Kaufmann, M. Larcher, J. Lengler, and X. Zou:
 
 1. [Self-adjusting Population Sizes for the (1,λ)-EA on Monotone Functions](https://arxiv.org/abs/2204.00531)
 2. [OneMax is not the Easiest Function for Fitness Improvements](https://arxiv.org/abs/2204.07017)
