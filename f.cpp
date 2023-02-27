@@ -4,8 +4,9 @@ void fDynamicBinval(){
 	int n = 1000;
 	float lbd = 1;
 	float s = 1.8;
-	int repeat = 10;
+	int repeat = 50;
 	bool fromzero = false;
+    bool randomRounding = false;
     
     int numc = 5;
     float c[5] = {0.95, 0.98, 1, 1.02, 1.05};
@@ -13,13 +14,17 @@ void fDynamicBinval(){
     float f[15] = {1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 4.75, 5.5, 6.25, 7, 8, 9, 10};
     
     for(int j=0; j<numc; ++j){
-        ofstream output("fDynamicBinval_c" + to_string(c[j]) + ".csv");
+        string roundingLabel = "_";
+        if(randomRounding == true)
+            roundingLabel = "_random";
+            
+        ofstream output("fDynamicBinval_c" + to_string(c[j]) + roundingLabel +".csv");
         for(int r=0; r<repeat; ++r){
             cout << c[j] << ", " << r << endl;
             for(int i=0; i<numf; ++i){
                 DynamicBinval dbv(n);
                 Saea <DynamicBinval> saea(lbd, c[j], s, f[i], dbv);
-                pair<int, double> res = saea.run(500*n, r+10, fromzero);
+                pair<int, double> res = saea.run(500*n, r+10, fromzero, false, NULL, NULL, NULL, randomRounding);
                 output << r << ',' << i << ',' << res.first << ',' << res.second << endl;
             }
         }

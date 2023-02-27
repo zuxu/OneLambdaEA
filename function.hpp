@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <vector>
 #include <map>
 #include <algorithm>
 
@@ -53,7 +54,7 @@ public:
         }
     }
     
-    // set (numOnes) many bits to one, often used after setzero()
+    // set the first (numOnes) many bits to one
     void setones(int numOnes){
         if(numOnes > n)
             cout << "not enought number of bits" << endl;
@@ -68,6 +69,15 @@ public:
         bits[numOnes>>3] = mask;
     }
     
+    // set (numOnes) many bits to one, with index of onebits specified
+    void setones(int numOnes, vector<int>& index){
+        for(int i=0; i<numOnes; ++i){
+            int ind1 = index[i]/8;
+            int ind2 = index[i]%8;
+            bits[ind1] |= bit(ind2);
+        }
+    }
+    
     // copy from another search point
     void copy(Point& p){
         if(n != p.n)
@@ -79,6 +89,7 @@ public:
     
     // mutate from another search point
     void mutate(Point& p, default_random_engine& gen, binomial_distribution<int>& dis){
+        
         if(n != p.n)
             cout << "invalid mutation" << endl;
         
@@ -90,6 +101,7 @@ public:
         
         std::copy(p.bits, p.bits+(n>>3), bits);
         map<int, bool> mutated;
+        
         while(num){
             int Ind = rand() % (n >> 3);
             int ind = rand() % 8;
@@ -110,8 +122,10 @@ public:
     }
     
     // test whether any monotone function was evaluated before
-    bool fitnessAvailable(){
-        return (fitness > -0.9);
+    // when the point needs to be evaluated for multiple functions
+    // set (multiFunc) to ture 
+    bool fitnessAvailable(bool multiFunc=false){
+        return (fitness > -0.9) && (!multiFunc);
     }
 };
 
@@ -172,8 +186,8 @@ public:
     // evaluate binary value on p, and update p.fitness
     // note that when n>300, the value can hardly be fit to a double,
     // so p.fitness will be set to -0.5 in this case
-    double evaluate(Point& p){
-        if(p.fitnessAvailable() == false){
+    double evaluate(Point& p, bool multiFunc=false){
+        if(p.fitnessAvailable(multiFunc) == false){
             if(n > 300){
                 p.fitness = -0.5;
             }
@@ -238,17 +252,15 @@ public:
     
     // similar to binary value, no evaluation for n>300
     double evaluate(Point& p){
-        if(p.fitnessAvailable() == false){
-            if(n > 300){
-                p.fitness = -0.5;
-            }
-            else{
-                p.fitness = 0;
-                for(int i=0; i<n; ++i)
-                    p.fitness = p.fitness*2 + p.at((*order)[i]);
-                for(int i=0; i<(n>>3); ++i){
-                    p.fitness = p.fitness*256 + p.bits[i];
-                }
+        if(n > 300){
+            p.fitness = -0.5;
+        }
+        else{
+            p.fitness = 0;
+            for(int i=0; i<n; ++i)
+                p.fitness = p.fitness*2 + p.at((*order)[i]);
+            for(int i=0; i<(n>>3); ++i){
+                p.fitness = p.fitness*256 + p.bits[i];
             }
         }
         return p.fitness;
@@ -282,8 +294,8 @@ public:
         delete bitcount;
     }
 
-    double evaluate(Point& p){
-        if(p.fitnessAvailable() == false){
+    double evaluate(Point& p, bool multiFunc=false){
+        if(p.fitnessAvailable(multiFunc) == false){
             int cnt = 0;
             for(int i=0; i<(n>>4); ++i)
                 cnt += bitcount->count[p.bits[i]];
@@ -294,8 +306,8 @@ public:
         return p.fitness;
     }
 
-    bool smaller(Point& p1, Point& p2){
-        return evaluate(p1) < evaluate(p2);
+    bool smaller(Point& p1, Point& p2, bool multiFunc=false){
+        return evaluate(p1, multiFunc) < evaluate(p2, multiFunc);
     }
 
     string name(){
@@ -398,8 +410,8 @@ public:
         delete bits;
     }
     
-    double evaluate(Point& p){
-        if(p.fitnessAvailable() == false){
+    double evaluate(Point& p, bool multiFunc=false){
+        if(p.fitnessAvailable(multiFunc) == false){
             // calculate the onemax
             if(p.onebitsAvailable() == false){
                 p.onemax = 0;
@@ -434,8 +446,8 @@ public:
         return p.fitness;
     };
 
-    bool smaller(Point& p1, Point& p2){
-        return evaluate(p1) < evaluate(p2);
+    bool smaller(Point& p1, Point& p2, bool multiFunc=false){
+        return evaluate(p1, multiFunc) < evaluate(p2, multiFunc);
     }
 
     string name(){

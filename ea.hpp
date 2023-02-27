@@ -38,10 +38,10 @@ public:
     // lbd: the number of evaluations at each fitness level
     // drift: the sum of the emprical drifts at each fitness level
     // return: (number of generations, number of evaluations)
-	pair<int, double> run(int maxGeneration, int seed=0, bool fromzero=false, bool details=false, int * cnt=NULL, double * lbd=NULL, double * drift=NULL){
+	pair<int, double> run(int maxGeneration, int seed=0, bool fromzero=false, bool details=false, int * cnt=NULL, double * lbd=NULL, double * drift=NULL, bool randomRounding=false){
 		char buf[256];
         // log of this run
-        sprintf(buf, "n-%s-%.2lf-%.2lf-%.2lf-%.2lf-%d-%d.csv", function->name().c_str(), lambda, c, s, F, maxGeneration, seed);
+        sprintf(buf, "n-%s-%.2lf-%.2lf-%.2lf-%.2lf-%d-%d-%d.csv", function->name().c_str(), lambda, c, s, F, maxGeneration, seed, randomRounding);
         if(elitist == true)
             buf[0] = 'e';
         ofstream output(buf);
@@ -56,18 +56,29 @@ public:
         
     	long t = 0; // generations
     	double eva = 0; // evaluations
-    	Bitcount bitcount;
+    	int intLambda = lambda; // rounded lambda
+        Bitcount bitcount;
     	
     	while(t < maxGeneration){
+            if(randomRounding == true){
+                bernoulli_distribution d(lambda - int(lambda));
+                if(dis(gen) == true)
+                    intLambda = int(lambda) + 1;
+                else
+                    intLambda = int(lambda);
+            }
+            else{
+                intLambda = int(lambda+0.5);
+            }
             
             // mutations
     		bestChild.mutate(parent, gen, dis);
-    		for(int i=1; i<int(lambda+0.5); ++i){
+    		for(int i=1; i<intLambda; ++i){
     			nextChild.mutate(parent, gen, dis);
     			if(function->smaller(bestChild, nextChild))
     				bestChild.copy(nextChild);
     		}
-    		eva += int(lambda+0.5);
+    		eva += intLambda;
             
             // record the details
             if(details == true){
